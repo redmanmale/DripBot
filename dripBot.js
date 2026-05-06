@@ -196,6 +196,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 		registerMod(this);
 	}
 
+	var findGlobalByMethod = function(methodName) {
+		for(var key in window) {
+			try {
+				var candidate = window[key];
+				if(candidate && (typeof candidate === 'object' || typeof candidate === 'function') && typeof candidate[methodName] === 'function') {
+					return candidate;
+				}
+			} catch(ignore) {}
+		}
+		return null;
+	}
+
 	var version = '',
 	successColor = '#5cb85c',
 	dangerColor = '#d9534f',
@@ -206,6 +218,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	realStage = 0,
 	canBuy = true,
 	started = false,
+	leaderBoardApi = null,
 	errorAlerted = false,
 	signupAlerted = false,
 	clickPointCount = 0,
@@ -271,7 +284,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var updateLeaderBoard = function(lb) {
-		LeaderBoardUI.oldCreateLeaderboardTable(lb);
+		if(leaderBoardApi && typeof leaderBoardApi.oldCreateLeaderboardTable === 'function') {
+			leaderBoardApi.oldCreateLeaderboardTable(lb);
+		}
 		addDiffsToLB(lb);
 	}
 
@@ -1313,19 +1328,31 @@ $dripBot = (function($, oldDripBot, isPro) {
 		function() { return true; }
 	);
 
-	if(typeof window.AnonymousUserManager !== 'undefined' && window.AnonymousUserManager) {
+	var anonymousUserManagerApi = (typeof window.AnonymousUserManager !== 'undefined' && window.AnonymousUserManager)
+		? window.AnonymousUserManager
+		: (typeof window.Q !== 'undefined' && window.Q && typeof window.Q.canDrip === 'function')
+			? window.Q
+		: findGlobalByMethod('canDrip');
+	if(anonymousUserManagerApi) {
 		new APIMod(
-			window.AnonymousUserManager,
+			anonymousUserManagerApi,
 			'canDrip',
 			function() { return true; }
 		);
 	}
 
-	new APIMod(
-		LeaderBoardUI,
-		'createLeaderboardTable',
-		updateLeaderBoard
-	);
+	leaderBoardApi = (typeof window.LeaderBoardUI !== 'undefined' && window.LeaderBoardUI)
+		? window.LeaderBoardUI
+		: (typeof window.R !== 'undefined' && window.R && typeof window.R.createLeaderboardTable === 'function')
+			? window.R
+		: findGlobalByMethod('createLeaderboardTable');
+	if(leaderBoardApi) {
+		new APIMod(
+			leaderBoardApi,
+			'createLeaderboardTable',
+			updateLeaderBoard
+		);
+	}
 
 
 	init();
