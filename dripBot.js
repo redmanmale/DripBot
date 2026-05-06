@@ -1245,7 +1245,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 		function() {
 			if(!datamonsterRequested) {
 				if(!datamonsterLoadSuccess()) {
-					$.getScript('https://apottere.github.io/Datamonster/datamonster.js');
+					$.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/refs/heads/master/datamonster.js');
 				}
 				datamonsterRequested = true;
 			}
