@@ -2,7 +2,7 @@ Highcharts.setOptions({colors:["#DDDF0D","#7798BF","#55BF3B","#DF5353","#aaeeee"
 
 $dripBot = (function($, oldDripBot, isPro) {
 
-	var host = 'https://apottere.github.io/DripBot/';
+	var host = 'https://redmanmale.com/DripBot/';
 
 	if(oldDripBot instanceof Object) {
 		console.log("Stopping old DripBot and starting a new one.");
@@ -1283,11 +1283,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 		function() { return true; }
 	);
 
-	new APIMod(
-		AnonymousUserManager,
-		'canDrip',
-		function() { return true; }
-	);
+	var dripPermissionManager =
+		(typeof AnonymousUserManager !== 'undefined' && AnonymousUserManager) ||
+		(typeof UserManager !== 'undefined' && UserManager) ||
+		null;
+
+	if(dripPermissionManager) {
+		new APIMod(
+			dripPermissionManager,
+			'canDrip',
+			function() { return true; }
+		);
+	}
 
 	new APIMod(
 		LeaderBoardUI,
