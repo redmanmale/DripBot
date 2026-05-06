@@ -1313,11 +1313,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 		function() { return true; }
 	);
 
-	new APIMod(
-		AnonymousUserManager,
-		'canDrip',
-		function() { return true; }
-	);
+	if(typeof window.AnonymousUserManager !== 'undefined' && window.AnonymousUserManager) {
+		new APIMod(
+			window.AnonymousUserManager,
+			'canDrip',
+			function() { return true; }
+		);
+	}
 
 	new APIMod(
 		LeaderBoardUI,
