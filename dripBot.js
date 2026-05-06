@@ -502,7 +502,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var clickButton = $('a#btn-addMem'),
 	dripButton = $('button#btn-addGlobalMem'),
-	modalButton = 'input.vex-dialog-button-primary';
+	modalButton = 'button.vex-dialog-button-primary, input.vex-dialog-button-primary';
 
 	var checkForError = function() {
 		if(!signupAlerted && $('div#signupDlg').is(':visible')) {
@@ -580,7 +580,44 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var buyPowerup = function(name) {
-		$(powerups[name]).click();
+		var powerup = getPowerupIdentifierByName(name);
+		if(powerup.length) {
+			powerup.click();
+		}
+	}
+
+	var getPowerupIdentifierByName = function(name) {
+		for(var i = 0; i < localStats.powerUps.length; i++) {
+			if(localStats.powerUps[i].name == name) {
+				return $('#powerupstore #pu' + (i + 1));
+			}
+		}
+		return $();
+	}
+
+	var getStoreUpgradeList = function() {
+		var upgrades = [];
+		localStats.powerUps.forEach(function(e) {
+			e.upgrades.forEach(function(u) {
+				if(u._unlocked && !u._purchased) {
+					upgrades.push(u);
+				}
+			});
+		});
+		upgrades.sort(function(a,b) {
+			return a.price - b.price;
+		});
+		return upgrades;
+	}
+
+	var getUpgradeIdentifierByName = function(name) {
+		var upgrades = getStoreUpgradeList();
+		for(var i = 0; i < upgrades.length; i++) {
+			if(upgrades[i].name == name) {
+				return $('#upgrades #upg' + (i + 1));
+			}
+		}
+		return $();
 	}
 
 	var getOTBList = function() {
@@ -625,18 +662,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var getIdentifierFromOTB = function(otb) {
 		if(otb.isUpgrade) {
-			var i = 1;
-			var list = getSortedUpgradeList();
-			for(var j = 0; j < list.length; j++) {
-				var u = list[j];
-				if(u.name == otb.item.name) {
-					return $('#upg' + i);
-				}
-				i++;
-			}
-			return $();
+			return getUpgradeIdentifierByName(otb.item.name);
 		} else {
-			return $(powerups[otb.item.name]);
+			return getPowerupIdentifierByName(otb.item.name);
 		}
 	}
 
@@ -658,7 +686,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 			topThing = sortOTBList(getOTBList())[0];
 		}
 		if(!oldTopThing || topThing.item.name !== oldTopThing.item.name) {
-			if(oldTopThing !== null) {
+			if(oldTopThing !== null && oldTopThing.ident && oldTopThing.ident.length) {
 				oldTopThing.ident.css({'background-color': ''});
 				oldTopThing.ident.tooltip().mouseleave();
 			}
@@ -666,8 +694,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 			if(topThing.isUpgrade) {
 				highlightTopThing.start();
 			} else {
-				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
-				topThing.ident.tooltip().mouseover();
+				if(topThing.ident && topThing.ident.length) {
+					topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+					topThing.ident.tooltip().mouseover();
+				}
 			}
 		}
 	}
@@ -738,22 +768,18 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var buyUpgrade = function(name) {
 		// Not thread safe!  If someone else uses the bytes we'll never know.
-		var i = 1;
-		getSortedUpgradeList().forEach(function(u) {
-			if(u.name == name) {
-				var upgrade = $('#upg' + i);
-				upgrade.click();
+		var upgrade = getUpgradeIdentifierByName(name);
+		if(upgrade.length) {
+			upgrade.click();
+			return true;
+		}
 
-				for(var n=0; n<localStats.specialUpgrades.length; n++) {
-					if(localStats.specialUpgrades[n].name == name) {
-						$(modalButton).click();
-						break;
-					}
-				}
+		for(var n = 0; n < localStats.specialUpgrades.length; n++) {
+			if(localStats.specialUpgrades[n].name == name) {
+				$(modalButton).click();
 				return true;
 			}
-			i++;
-		});
+		}
 		return false;
 	}
 
@@ -983,7 +1009,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 		$('div#leaderBoard table tbody tr td.leader-diff').remove();
 		if(topThing) {
-			topThing.ident.css({"background-color": ''});
+			if(topThing.ident && topThing.ident.length) {
+				topThing.ident.css({"background-color": ''});
+			}
 		}
 		$('div#upgrades').children('div').css({"background-color":""});
 
@@ -1228,8 +1256,10 @@ $dripBot = (function($, oldDripBot, isPro) {
 	);
 	var highlightTopThing = new TimeoutMod(
 		function() {
-			topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
-			topThing.ident.tooltip().mouseover();
+			if(topThing && topThing.ident && topThing.ident.length) {
+				topThing.ident.css({"background-color" : "rgba(105,187,207,1)"});
+				topThing.ident.tooltip().mouseover();
+			}
 		},
 		200,
 		true
@@ -1283,18 +1313,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 		function() { return true; }
 	);
 
-	var dripPermissionManager =
-		(typeof AnonymousUserManager !== 'undefined' && AnonymousUserManager) ||
-		(typeof UserManager !== 'undefined' && UserManager) ||
-		null;
-
-	if(dripPermissionManager) {
-		new APIMod(
-			dripPermissionManager,
-			'canDrip',
-			function() { return true; }
-		);
-	}
+	new APIMod(
+		AnonymousUserManager,
+		'canDrip',
+		function() { return true; }
+	);
 
 	new APIMod(
 		LeaderBoardUI,
