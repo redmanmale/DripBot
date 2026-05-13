@@ -227,6 +227,7 @@ $dripBot = (function($, oldDripBot, isPro) {
 	CPSCMALongCount = 0,
 	CPSCMALong = 0,
 	CPSCMACount = 0,
+	lastActualCps = 0,
 	CPSPid = -1,
 	CPSChart = null,
 	CPSChartLength = 30,
@@ -393,6 +394,7 @@ $dripBot = (function($, oldDripBot, isPro) {
         series[0].addPoint([x, clicksPerSecond], true, shift);
         series[1].addPoint([x, clicksPerSecondCMA], true, shift);
         series[2].addPoint([x, CPSCMALong], true, shift);
+        lastActualCps = clicksPerSecond;
         clicksPerSecond = 0;
 
         updateRealBpsDisplay();
@@ -549,9 +551,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 		return 0;
 	}
 
-	/** Official B/s from buildings + long-run click rate (CPS) times bytes per click; same as CPM_avg/60 * bpc. */
+	/** Official B/s + last completed second's Actual CPS (chart series 0) × bytes per click. */
 	var getRealBps = function() {
-		return getOfficialBps() + CPSCMALong * getBytesPerClick();
+		return getOfficialBps() + lastActualCps * getBytesPerClick();
 	}
 
 	/** Round to 2 decimals; unit B/s, kB/s, MB/s, GB/s, TB/s by magnitude (1024-based). */
