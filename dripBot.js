@@ -235,13 +235,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 	currentLeader = '',
 	benevolentLeader = false,
 	showPops = true,
-	MINUTE = 60 * 1000,
 	topThing = null,
 	datamonsterLoaded = false,
 	datamonsterRequested = false,
 	datamonsterConfigured = false,
 	stage3counter = 0,
-	clickCountDivisor = 1,
+	autoClickSessionCount = 0,
 	excludedPowerups = [],
 	excludedUpgrades = [];
 
@@ -467,7 +466,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	}
 
 	var clicking = new Save('clicking', false);
-	var clicksLeft = new Save('clicksLeft', 2000);
 	var autoBuy = new Save('autoBuy', false);
 	var stage3threshold = new Save('stage3threshold', 7 * 1000 * 1000);
 
@@ -550,15 +548,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var updateClickInterval = function() {
 		clicker.timeout = getNewClickTimeout();
 
-		if(clicker.timeout < 60000) {
-			$('#click-interval-message').text("Clicks Left: " + clicksLeft.obj);
+		if(clicking.obj) {
+			$('#click-interval-message').text(String(autoClickSessionCount));
+			$('#click-interval div.progress-bar-success').css('width', '100%');
 		} else {
-			var minutes = Math.floor(clicker.timeout / MINUTE);
-			var seconds = Math.floor((clicker.timeout - minutes * MINUTE) / 1000);
-			$('#click-interval-message').text("Sleeping for: " + minutes + ':' + seconds);
+			$('#click-interval-message').text('0');
+			$('#click-interval div.progress-bar-success').css('width', '0%');
 		}
-
-		$('#click-interval div.progress-bar-success').css('width', (100 - (clicksLeft.obj / clickCountDivisor) * 100) + '%');
 	}
 
 	function OTB(o, upgrade) {
@@ -808,9 +804,11 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var stopClicking = function() {
 		clicker.stop();
+		updateClickInterval();
 	}
 
 	var startClicking = function() {
+		autoClickSessionCount = 0;
 		updateClickInterval();
 		clicker.start();
 	}
@@ -990,23 +988,12 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var getNewClickTimeout = function() {
 		var temp = rc4Rand.getRandomNumber();
-		if(clicksLeft.obj < 1) {
-			temp = temp * 3 * MINUTE + 7 * MINUTE;
-			getNewClicksTillBreak();
-		} else {
-			temp = temp * 50 + 100;
-			clicksLeft.set(clicksLeft.obj - 1);
-		}
-		return Math.floor(temp);
-	}
-
-	var getNewClicksTillBreak = function() {
-		clicksLeft.set(Math.floor(rc4Rand.getRandomNumber() * 500 + 2200));
-		clickCountDivisor = clicksLeft.obj;
+		return Math.floor(temp * 50 + 100);
 	}
 
 	var smartChainClick = function() {
 		if(clicking.obj) {
+			autoClickSessionCount++;
 			updateClickInterval();
 			clicker.start();
 			clickCup();
@@ -1260,7 +1247,6 @@ $dripBot = (function($, oldDripBot, isPro) {
 	var CPSTick = new IntervalMod(tickCPS, 1000, true);
 
 	var clicker = new TimeoutMod(smartChainClick, 100, true);
-	clickCountDivisor = clicksLeft.obj;
 
 	var versionUpdate = new TimeoutMod(
 		function() {
