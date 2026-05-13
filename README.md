@@ -1,22 +1,18 @@
-DripBot v2.6
+DripBot
 ============
 
-Makes dripstat fun again.  Plays the game at <http://dripstat.com/game> optimally and automatically.
+Makes dripstat fun again.  Plays the game at <https://dropstatgame.solant.me/> optimally and automatically.
 
 *DripBot is an autoclicker as well!*  Dripbot defaults to not clicking, and when it does click uses an algorith to attempt to appear human.  Although the algorithm is pretty good, *USE AT YOUR OWN RISK.*
 The pops from clicking and global dripping are on by default, and can be toggled with `$dripBot.setShowPops(bool);`, where `bool` is a boolean value (true/false).  Defaults to false.
 
 Usage
 -----
-Get the [Google Chrome extension](https://chrome.google.com/webstore/detail/dripbot-plus/ikbccchmlnodccdacimdpmbbgodkdoih)!  This will automatically load DripBot whenever you go to <https://www.dripstat.com/game>, and allows DripBot to reload itself when the game errors.
+Use a bookmark to easily start DripBot.  Create a new bookmark with `javascript:(function(){$.getScript('https://redmanmale.com/DripBot/dripBot.js');}());` as the *url*.  Then just head over to [dripstat](https://dropstatgame.solant.me), and once the page loads click your bookmark.
 
 *or*
 
-Use a bookmark to easily start DripBot.  Create a new bookmark with `javascript:(function(){$.getScript('https://apottere.github.io/DripBot/dripBot.js');}());` as the *url*.  Then just head over to [dripstat](http://dripstat.com/game), and once the page loads click your bookmark.
-
-*or*
-
-After loading dripstat, paste the following into your browser's console and press Enter: `$.getScript('https://apottere.github.io/DripBot/dripBot.js');`
+After loading dripstat, paste the following into your browser's console and press Enter: `$.getScript('https://redmanmale.com/DripBot/dripBot.js');`
 
 For more information on browser consoles, see <http://webmasters.stackexchange.com/questions/8525/how-to-open-the-javascript-console-in-different-browsers> (YMMV).
 
@@ -29,3 +25,10 @@ Stages
 3. *Win:* Attempts to climb to first place by dripping constantly, and optionally stops when achieved.  Whether to drip when in first place or not can be toggled with `$dripBot.setBenevolentLeader(bool);`, where `bool` is a boolean value (true/false).  Defaults to false.
 
 
+Diff from original
+---
+
+* fixed for new DripStat version
+* restored missing assets
+* disabled autoclicker pause
+* show real bps value
