@@ -544,10 +544,9 @@ $dripBot = (function($, oldDripBot, isPro) {
 
 	var getBytesPerClick = function() {
 		try {
-			if(typeof CoffeeCup !== 'undefined' && typeof CoffeeCup.calcBytesPerClick === 'function') {
-				return CoffeeCup.calcBytesPerClick();
-			}
+			return Math.max((localStats.bps * (10 * localStats.cursor().purchasedUpgrades.length) / 100), 1);
 		} catch(ignore) {}
+		console.log("error getting bps");
 		return 0;
 	}
 
@@ -556,13 +555,13 @@ $dripBot = (function($, oldDripBot, isPro) {
 		return getOfficialBps() + lastActualCps * getBytesPerClick();
 	}
 
-	/** Round to 2 decimals; unit B/s, kB/s, MB/s, GB/s, TB/s by magnitude (1024-based). */
+	/** Round to 2 decimals; unit B/s, kB/s, MB/s, GB/s, TB/s by magnitude (1000-based). */
 	var formatRealBpsHuman = function(bytesPerSec) {
 		var v = typeof bytesPerSec === 'number' && isFinite(bytesPerSec) ? bytesPerSec : 0;
 		if(v < 0) {
 			v = 0;
 		}
-		var K = 1024;
+		var K = 1000;
 		var M = K * K;
 		var G = M * K;
 		var T = G * K;
