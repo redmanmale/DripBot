@@ -395,6 +395,7 @@ $dripBot = (function($, oldDripBot, isPro) {
         series[2].addPoint([x, CPSCMALong], true, shift);
         clicksPerSecond = 0;
 
+        updateRealBpsDisplay();
     }
 
 	var destroyCPSChart = function() {
@@ -532,8 +533,69 @@ $dripBot = (function($, oldDripBot, isPro) {
 		}
 	}
 
+	var getOfficialBps = function() {
+		if(typeof localStats !== 'undefined' && localStats !== null && typeof localStats.bps === 'number') {
+			return localStats.bps;
+		}
+		return 0;
+	}
+
+	var getBytesPerClick = function() {
+		try {
+			if(typeof CoffeeCup !== 'undefined' && typeof CoffeeCup.calcBytesPerClick === 'function') {
+				return CoffeeCup.calcBytesPerClick();
+			}
+		} catch(ignore) {}
+		return 0;
+	}
+
+	/** Official B/s from buildings + long-run click rate (CPS) times bytes per click; same as CPM_avg/60 * bpc. */
+	var getRealBps = function() {
+		return getOfficialBps() + CPSCMALong * getBytesPerClick();
+	}
+
+	/** Round to 2 decimals; unit B/s, kB/s, MB/s, GB/s, TB/s by magnitude (1024-based). */
+	var formatRealBpsHuman = function(bytesPerSec) {
+		var v = typeof bytesPerSec === 'number' && isFinite(bytesPerSec) ? bytesPerSec : 0;
+		if(v < 0) {
+			v = 0;
+		}
+		var K = 1024;
+		var M = K * K;
+		var G = M * K;
+		var T = G * K;
+		var scaled;
+		var suffix;
+		if(v >= T) {
+			scaled = v / T;
+			suffix = 'TB/s';
+		} else if(v >= G) {
+			scaled = v / G;
+			suffix = 'GB/s';
+		} else if(v >= M) {
+			scaled = v / M;
+			suffix = 'MB/s';
+		} else if(v >= K) {
+			scaled = v / K;
+			suffix = 'kB/s';
+		} else {
+			scaled = v;
+			suffix = 'B/s';
+		}
+		return scaled.toFixed(2) + ' ' + suffix;
+	}
+
+	var updateRealBpsDisplay = function() {
+		var el = $('#dripbot-real-bps');
+		if(!el.length) {
+			return;
+		}
+		el.text('Real: ' + formatRealBpsHuman(getRealBps()));
+	}
+
 	var updateTitleText = function() {
 		$('#dripbot-title').text('DripBot v' + version + (isDripBotPro ? ' Pro' : '') + ', Stage ' + stages[stage].name);
+		updateRealBpsDisplay();
 	}
 
 	var updateNextPurchase = function(purchase) {
@@ -1141,7 +1203,8 @@ $dripBot = (function($, oldDripBot, isPro) {
 		'#dripbot',
 		'<div id="dripbot">\
 			<img id="dripbot-logo" src="' + host + 'dripico.png" />\
-			<h3 id="dripbot-title"></h3>\
+			<h3 id="dripbot-title" style="display:inline;margin:0 10px 0 0;vertical-align:baseline;"></h3>\
+			<span id="dripbot-real-bps" style="font-size:15px;font-weight:normal;color:#5cb85c;vertical-align:baseline;"></span>\
 			<ul>\
 				<li id="next-purchase"><p>Next Purchase: </p></li>\
 				<li id="auto-buy"><p>Auto buy</p></li>\
